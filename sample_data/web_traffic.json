@@ -1,0 +1,902 @@
+[
+  {
+    "timestamp": "2024-01-01T00:00:00Z",
+    "page": "/home",
+    "sessions": 500,
+    "bounce_rate": 20,
+    "avg_duration": 60,
+    "conversions": 10,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-02-02T01:00:00Z",
+    "page": "/products",
+    "sessions": 523,
+    "bounce_rate": 37,
+    "avg_duration": 91,
+    "conversions": 47,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-03-03T02:00:00Z",
+    "page": "/pricing",
+    "sessions": 546,
+    "bounce_rate": 54,
+    "avg_duration": 122,
+    "conversions": 87,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-04-04T03:00:00Z",
+    "page": "/blog",
+    "sessions": 569,
+    "bounce_rate": 71,
+    "avg_duration": 153,
+    "conversions": 45,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-05-05T04:00:00Z",
+    "page": "/docs",
+    "sessions": 592,
+    "bounce_rate": 28,
+    "avg_duration": 184,
+    "conversions": 88,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-06-06T05:00:00Z",
+    "page": "/about",
+    "sessions": 615,
+    "bounce_rate": 45,
+    "avg_duration": 215,
+    "conversions": 43,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-07-07T06:00:00Z",
+    "page": "/contact",
+    "sessions": 638,
+    "bounce_rate": 62,
+    "avg_duration": 246,
+    "conversions": 89,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-08-08T07:00:00Z",
+    "page": "/home",
+    "sessions": 661,
+    "bounce_rate": 79,
+    "avg_duration": 277,
+    "conversions": 39,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-09-09T08:00:00Z",
+    "page": "/products",
+    "sessions": 684,
+    "bounce_rate": 36,
+    "avg_duration": 308,
+    "conversions": 88,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-10-10T09:00:00Z",
+    "page": "/pricing",
+    "sessions": 707,
+    "bounce_rate": 53,
+    "avg_duration": 339,
+    "conversions": 35,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-11-11T10:00:00Z",
+    "page": "/blog",
+    "sessions": 730,
+    "bounce_rate": 70,
+    "avg_duration": 70,
+    "conversions": 87,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-12-12T11:00:00Z",
+    "page": "/docs",
+    "sessions": 753,
+    "bounce_rate": 27,
+    "avg_duration": 101,
+    "conversions": 30,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-01-13T12:00:00Z",
+    "page": "/about",
+    "sessions": 776,
+    "bounce_rate": 44,
+    "avg_duration": 132,
+    "conversions": 85,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-02-14T13:00:00Z",
+    "page": "/contact",
+    "sessions": 799,
+    "bounce_rate": 61,
+    "avg_duration": 163,
+    "conversions": 23,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-03-15T14:00:00Z",
+    "page": "/home",
+    "sessions": 822,
+    "bounce_rate": 78,
+    "avg_duration": 194,
+    "conversions": 82,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-04-16T15:00:00Z",
+    "page": "/products",
+    "sessions": 845,
+    "bounce_rate": 35,
+    "avg_duration": 225,
+    "conversions": 16,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-05-17T16:00:00Z",
+    "page": "/pricing",
+    "sessions": 868,
+    "bounce_rate": 52,
+    "avg_duration": 256,
+    "conversions": 78,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-06-18T17:00:00Z",
+    "page": "/blog",
+    "sessions": 891,
+    "bounce_rate": 69,
+    "avg_duration": 287,
+    "conversions": 142,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-07-19T18:00:00Z",
+    "page": "/docs",
+    "sessions": 914,
+    "bounce_rate": 26,
+    "avg_duration": 318,
+    "conversions": 73,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-08-20T19:00:00Z",
+    "page": "/about",
+    "sessions": 937,
+    "bounce_rate": 43,
+    "avg_duration": 349,
+    "conversions": 140,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-09-21T20:00:00Z",
+    "page": "/contact",
+    "sessions": 960,
+    "bounce_rate": 60,
+    "avg_duration": 80,
+    "conversions": 67,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-10-22T21:00:00Z",
+    "page": "/home",
+    "sessions": 983,
+    "bounce_rate": 77,
+    "avg_duration": 111,
+    "conversions": 137,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-11-23T22:00:00Z",
+    "page": "/products",
+    "sessions": 1006,
+    "bounce_rate": 34,
+    "avg_duration": 142,
+    "conversions": 60,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-12-24T23:00:00Z",
+    "page": "/pricing",
+    "sessions": 1029,
+    "bounce_rate": 51,
+    "avg_duration": 173,
+    "conversions": 133,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-01-25T00:00:00Z",
+    "page": "/blog",
+    "sessions": 1052,
+    "bounce_rate": 68,
+    "avg_duration": 204,
+    "conversions": 52,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-02-26T01:00:00Z",
+    "page": "/docs",
+    "sessions": 1075,
+    "bounce_rate": 25,
+    "avg_duration": 235,
+    "conversions": 129,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-03-27T02:00:00Z",
+    "page": "/about",
+    "sessions": 1098,
+    "bounce_rate": 42,
+    "avg_duration": 266,
+    "conversions": 43,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-04-28T03:00:00Z",
+    "page": "/contact",
+    "sessions": 1121,
+    "bounce_rate": 59,
+    "avg_duration": 297,
+    "conversions": 123,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-05-01T04:00:00Z",
+    "page": "/home",
+    "sessions": 1144,
+    "bounce_rate": 76,
+    "avg_duration": 328,
+    "conversions": 34,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-06-02T05:00:00Z",
+    "page": "/products",
+    "sessions": 1167,
+    "bounce_rate": 33,
+    "avg_duration": 359,
+    "conversions": 116,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-07-03T06:00:00Z",
+    "page": "/pricing",
+    "sessions": 1190,
+    "bounce_rate": 50,
+    "avg_duration": 90,
+    "conversions": 23,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-08-04T07:00:00Z",
+    "page": "/blog",
+    "sessions": 1213,
+    "bounce_rate": 67,
+    "avg_duration": 121,
+    "conversions": 109,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-09-05T08:00:00Z",
+    "page": "/docs",
+    "sessions": 1236,
+    "bounce_rate": 24,
+    "avg_duration": 152,
+    "conversions": 197,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-10-06T09:00:00Z",
+    "page": "/about",
+    "sessions": 1259,
+    "bounce_rate": 41,
+    "avg_duration": 183,
+    "conversions": 100,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-11-07T10:00:00Z",
+    "page": "/contact",
+    "sessions": 1282,
+    "bounce_rate": 58,
+    "avg_duration": 214,
+    "conversions": 192,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-12-08T11:00:00Z",
+    "page": "/home",
+    "sessions": 1305,
+    "bounce_rate": 75,
+    "avg_duration": 245,
+    "conversions": 91,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-01-09T12:00:00Z",
+    "page": "/products",
+    "sessions": 1328,
+    "bounce_rate": 32,
+    "avg_duration": 276,
+    "conversions": 185,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-02-10T13:00:00Z",
+    "page": "/pricing",
+    "sessions": 1351,
+    "bounce_rate": 49,
+    "avg_duration": 307,
+    "conversions": 81,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-03-11T14:00:00Z",
+    "page": "/blog",
+    "sessions": 1374,
+    "bounce_rate": 66,
+    "avg_duration": 338,
+    "conversions": 178,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-04-12T15:00:00Z",
+    "page": "/docs",
+    "sessions": 1397,
+    "bounce_rate": 23,
+    "avg_duration": 69,
+    "conversions": 69,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-05-13T16:00:00Z",
+    "page": "/about",
+    "sessions": 1420,
+    "bounce_rate": 40,
+    "avg_duration": 100,
+    "conversions": 170,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-06-14T17:00:00Z",
+    "page": "/contact",
+    "sessions": 1443,
+    "bounce_rate": 57,
+    "avg_duration": 131,
+    "conversions": 57,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-07-15T18:00:00Z",
+    "page": "/home",
+    "sessions": 1466,
+    "bounce_rate": 74,
+    "avg_duration": 162,
+    "conversions": 161,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-08-16T19:00:00Z",
+    "page": "/products",
+    "sessions": 1489,
+    "bounce_rate": 31,
+    "avg_duration": 193,
+    "conversions": 44,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-09-17T20:00:00Z",
+    "page": "/pricing",
+    "sessions": 1512,
+    "bounce_rate": 48,
+    "avg_duration": 224,
+    "conversions": 151,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-10-18T21:00:00Z",
+    "page": "/blog",
+    "sessions": 1535,
+    "bounce_rate": 65,
+    "avg_duration": 255,
+    "conversions": 30,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-11-19T22:00:00Z",
+    "page": "/docs",
+    "sessions": 1558,
+    "bounce_rate": 22,
+    "avg_duration": 286,
+    "conversions": 140,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-12-20T23:00:00Z",
+    "page": "/about",
+    "sessions": 1581,
+    "bounce_rate": 39,
+    "avg_duration": 317,
+    "conversions": 252,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-01-21T00:00:00Z",
+    "page": "/contact",
+    "sessions": 1604,
+    "bounce_rate": 56,
+    "avg_duration": 348,
+    "conversions": 128,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-02-22T01:00:00Z",
+    "page": "/home",
+    "sessions": 1627,
+    "bounce_rate": 73,
+    "avg_duration": 79,
+    "conversions": 244,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-03-23T02:00:00Z",
+    "page": "/products",
+    "sessions": 1650,
+    "bounce_rate": 30,
+    "avg_duration": 110,
+    "conversions": 115,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-04-24T03:00:00Z",
+    "page": "/pricing",
+    "sessions": 1673,
+    "bounce_rate": 47,
+    "avg_duration": 141,
+    "conversions": 234,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-05-25T04:00:00Z",
+    "page": "/blog",
+    "sessions": 1696,
+    "bounce_rate": 64,
+    "avg_duration": 172,
+    "conversions": 101,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-06-26T05:00:00Z",
+    "page": "/docs",
+    "sessions": 1719,
+    "bounce_rate": 21,
+    "avg_duration": 203,
+    "conversions": 223,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-07-27T06:00:00Z",
+    "page": "/about",
+    "sessions": 1742,
+    "bounce_rate": 38,
+    "avg_duration": 234,
+    "conversions": 87,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-08-28T07:00:00Z",
+    "page": "/contact",
+    "sessions": 1765,
+    "bounce_rate": 55,
+    "avg_duration": 265,
+    "conversions": 211,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-09-01T08:00:00Z",
+    "page": "/home",
+    "sessions": 1788,
+    "bounce_rate": 72,
+    "avg_duration": 296,
+    "conversions": 71,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-10-02T09:00:00Z",
+    "page": "/products",
+    "sessions": 1811,
+    "bounce_rate": 29,
+    "avg_duration": 327,
+    "conversions": 199,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-11-03T10:00:00Z",
+    "page": "/pricing",
+    "sessions": 1834,
+    "bounce_rate": 46,
+    "avg_duration": 358,
+    "conversions": 55,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-12-04T11:00:00Z",
+    "page": "/blog",
+    "sessions": 1857,
+    "bounce_rate": 63,
+    "avg_duration": 89,
+    "conversions": 185,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-01-05T12:00:00Z",
+    "page": "/docs",
+    "sessions": 1880,
+    "bounce_rate": 20,
+    "avg_duration": 120,
+    "conversions": 37,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-02-06T13:00:00Z",
+    "page": "/about",
+    "sessions": 1903,
+    "bounce_rate": 37,
+    "avg_duration": 151,
+    "conversions": 171,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-03-07T14:00:00Z",
+    "page": "/contact",
+    "sessions": 1926,
+    "bounce_rate": 54,
+    "avg_duration": 182,
+    "conversions": 308,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-04-08T15:00:00Z",
+    "page": "/home",
+    "sessions": 1949,
+    "bounce_rate": 71,
+    "avg_duration": 213,
+    "conversions": 155,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-05-09T16:00:00Z",
+    "page": "/products",
+    "sessions": 1972,
+    "bounce_rate": 28,
+    "avg_duration": 244,
+    "conversions": 295,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-06-10T17:00:00Z",
+    "page": "/pricing",
+    "sessions": 1995,
+    "bounce_rate": 45,
+    "avg_duration": 275,
+    "conversions": 139,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-07-11T18:00:00Z",
+    "page": "/blog",
+    "sessions": 2018,
+    "bounce_rate": 62,
+    "avg_duration": 306,
+    "conversions": 282,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-08-12T19:00:00Z",
+    "page": "/docs",
+    "sessions": 2041,
+    "bounce_rate": 79,
+    "avg_duration": 337,
+    "conversions": 122,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-09-13T20:00:00Z",
+    "page": "/about",
+    "sessions": 2064,
+    "bounce_rate": 36,
+    "avg_duration": 68,
+    "conversions": 268,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-10-14T21:00:00Z",
+    "page": "/contact",
+    "sessions": 2087,
+    "bounce_rate": 53,
+    "avg_duration": 99,
+    "conversions": 104,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-11-15T22:00:00Z",
+    "page": "/home",
+    "sessions": 2110,
+    "bounce_rate": 70,
+    "avg_duration": 130,
+    "conversions": 253,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-12-16T23:00:00Z",
+    "page": "/products",
+    "sessions": 2133,
+    "bounce_rate": 27,
+    "avg_duration": 161,
+    "conversions": 85,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-01-17T00:00:00Z",
+    "page": "/pricing",
+    "sessions": 2156,
+    "bounce_rate": 44,
+    "avg_duration": 192,
+    "conversions": 237,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-02-18T01:00:00Z",
+    "page": "/blog",
+    "sessions": 2179,
+    "bounce_rate": 61,
+    "avg_duration": 223,
+    "conversions": 65,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-03-19T02:00:00Z",
+    "page": "/docs",
+    "sessions": 2202,
+    "bounce_rate": 78,
+    "avg_duration": 254,
+    "conversions": 220,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-04-20T03:00:00Z",
+    "page": "/about",
+    "sessions": 2225,
+    "bounce_rate": 35,
+    "avg_duration": 285,
+    "conversions": 44,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-05-21T04:00:00Z",
+    "page": "/contact",
+    "sessions": 2248,
+    "bounce_rate": 52,
+    "avg_duration": 316,
+    "conversions": 202,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-06-22T05:00:00Z",
+    "page": "/home",
+    "sessions": 2271,
+    "bounce_rate": 69,
+    "avg_duration": 347,
+    "conversions": 363,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-07-23T06:00:00Z",
+    "page": "/products",
+    "sessions": 2294,
+    "bounce_rate": 26,
+    "avg_duration": 78,
+    "conversions": 183,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-08-24T07:00:00Z",
+    "page": "/pricing",
+    "sessions": 2317,
+    "bounce_rate": 43,
+    "avg_duration": 109,
+    "conversions": 347,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-09-25T08:00:00Z",
+    "page": "/blog",
+    "sessions": 2340,
+    "bounce_rate": 60,
+    "avg_duration": 140,
+    "conversions": 163,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-10-26T09:00:00Z",
+    "page": "/docs",
+    "sessions": 2363,
+    "bounce_rate": 77,
+    "avg_duration": 171,
+    "conversions": 330,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-11-27T10:00:00Z",
+    "page": "/about",
+    "sessions": 2386,
+    "bounce_rate": 34,
+    "avg_duration": 202,
+    "conversions": 143,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-12-28T11:00:00Z",
+    "page": "/contact",
+    "sessions": 2409,
+    "bounce_rate": 51,
+    "avg_duration": 233,
+    "conversions": 313,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-01-01T12:00:00Z",
+    "page": "/home",
+    "sessions": 2432,
+    "bounce_rate": 68,
+    "avg_duration": 264,
+    "conversions": 121,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-02-02T13:00:00Z",
+    "page": "/products",
+    "sessions": 2455,
+    "bounce_rate": 25,
+    "avg_duration": 295,
+    "conversions": 294,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-03-03T14:00:00Z",
+    "page": "/pricing",
+    "sessions": 2478,
+    "bounce_rate": 42,
+    "avg_duration": 326,
+    "conversions": 99,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-04-04T15:00:00Z",
+    "page": "/blog",
+    "sessions": 501,
+    "bounce_rate": 59,
+    "avg_duration": 357,
+    "conversions": 55,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-05-05T16:00:00Z",
+    "page": "/docs",
+    "sessions": 524,
+    "bounce_rate": 76,
+    "avg_duration": 88,
+    "conversions": 15,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-06-06T17:00:00Z",
+    "page": "/about",
+    "sessions": 547,
+    "bounce_rate": 33,
+    "avg_duration": 119,
+    "conversions": 54,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-07-07T18:00:00Z",
+    "page": "/contact",
+    "sessions": 570,
+    "bounce_rate": 50,
+    "avg_duration": 150,
+    "conversions": 11,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-08-08T19:00:00Z",
+    "page": "/home",
+    "sessions": 593,
+    "bounce_rate": 67,
+    "avg_duration": 181,
+    "conversions": 53,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-09-09T20:00:00Z",
+    "page": "/products",
+    "sessions": 616,
+    "bounce_rate": 24,
+    "avg_duration": 212,
+    "conversions": 98,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-10-10T21:00:00Z",
+    "page": "/pricing",
+    "sessions": 639,
+    "bounce_rate": 41,
+    "avg_duration": 243,
+    "conversions": 51,
+    "source": "Email"
+  },
+  {
+    "timestamp": "2024-11-11T22:00:00Z",
+    "page": "/blog",
+    "sessions": 662,
+    "bounce_rate": 58,
+    "avg_duration": 274,
+    "conversions": 99,
+    "source": "Referral"
+  },
+  {
+    "timestamp": "2024-12-12T23:00:00Z",
+    "page": "/docs",
+    "sessions": 685,
+    "bounce_rate": 75,
+    "avg_duration": 305,
+    "conversions": 47,
+    "source": "Organic Search"
+  },
+  {
+    "timestamp": "2024-01-13T00:00:00Z",
+    "page": "/about",
+    "sessions": 708,
+    "bounce_rate": 32,
+    "avg_duration": 336,
+    "conversions": 99,
+    "source": "Google"
+  },
+  {
+    "timestamp": "2024-02-14T01:00:00Z",
+    "page": "/contact",
+    "sessions": 731,
+    "bounce_rate": 49,
+    "avg_duration": 67,
+    "conversions": 43,
+    "source": "Direct"
+  },
+  {
+    "timestamp": "2024-03-15T02:00:00Z",
+    "page": "/home",
+    "sessions": 754,
+    "bounce_rate": 66,
+    "avg_duration": 98,
+    "conversions": 98,
+    "source": "Social Media"
+  },
+  {
+    "timestamp": "2024-04-16T03:00:00Z",
+    "page": "/products",
+    "sessions": 777,
+    "bounce_rate": 23,
+    "avg_duration": 129,
+    "conversions": 38,
+    "source": "Email"
+  }
+]

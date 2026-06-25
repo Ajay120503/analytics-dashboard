@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-multipart
+aiofiles
+pandas
+numpy
+openpyxl
+pdfplumber
+sqlalchemy
+requests
+python-dotenv
+xlrd
+chardet
