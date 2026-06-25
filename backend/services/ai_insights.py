@@ -56,6 +56,18 @@ def generate_insights(df_summary: dict) -> str:
         return _generate_fallback_insights(df_summary)
 
 
+def _safe_num(val, fmt=".2f"):
+    """Safely format a numeric value, returning 'N/A' if it's not a number."""
+    if val is None:
+        return "N/A"
+    if isinstance(val, (int, float)):
+        return f"{val:{fmt}}"
+    try:
+        return f"{float(val):{fmt}}"
+    except (ValueError, TypeError):
+        return str(val)
+
+
 def _build_prompt(summary: dict) -> str:
     lines = []
     lines.append("You are a data analyst. Analyze the following dataset summary and provide 5-7 bullet point insights.")
@@ -74,12 +86,12 @@ def _build_prompt(summary: dict) -> str:
         lines.append("Numeric Column Statistics:")
         for col, stats in numeric_stats.items():
             lines.append(
-                f"  - {col}: mean={stats.get('mean', 'N/A'):.2f}, "
-                f"std={stats.get('std', 'N/A'):.2f}, "
-                f"min={stats.get('min', 'N/A')}, "
-                f"max={stats.get('max', 'N/A')}, "
-                f"median={stats.get('median', 'N/A')}, "
-                f"count={stats.get('count', 'N/A')}"
+                f"  - {col}: mean={_safe_num(stats.get('mean'))}, "
+                f"std={_safe_num(stats.get('std'))}, "
+                f"min={_safe_num(stats.get('min'))}, "
+                f"max={_safe_num(stats.get('max'))}, "
+                f"median={_safe_num(stats.get('median'))}, "
+                f"count={_safe_num(stats.get('count'), 'd')}"
             )
         lines.append("")
 
@@ -107,9 +119,13 @@ def _generate_fallback_insights(summary: dict) -> str:
         insights.append("")
         insights.append("📈 **Key Numeric Findings**")
         for col, stats in list(numeric_stats.items())[:3]:
+            min_val = stats.get("min", "N/A")
+            max_val = stats.get("max", "N/A")
+            median_val = stats.get("median", "N/A")
+            mean_val = stats.get("mean", "N/A")
             insights.append(
-                f"- **{col}**: Ranges from {stats.get('min', 'N/A')} to {stats.get('max', 'N/A')} "
-                f"(median: {stats.get('median', 'N/A'):.1f}, mean: {stats.get('mean', 'N/A'):.1f})"
+                f"- **{col}**: Ranges from {min_val} to {max_val} "
+                f"(median: {_safe_num(median_val, '.1f')}, mean: {_safe_num(mean_val, '.1f')})"
             )
 
     cat_top = summary.get("categorical_top", {})

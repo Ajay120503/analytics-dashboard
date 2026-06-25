@@ -56,3 +56,92 @@
     opacity: 1;
   }
 }
+
+/* Print Styles */
+@media print {
+  body {
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color: #000000 !important;
+  }
+
+  header,
+  .sticky,
+  button,
+  .toaster-container {
+    display: none !important;
+  }
+
+  .glass-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .bg-surface {
+    background: #ffffff !important;
+  }
+
+  .bg-card {
+    background: #ffffff !important;
+  }
+
+  .text-white,
+  .text-gray-200,
+  .text-gray-300 {
+    color: #1e293b !important;
+  }
+
+  .text-gray-400,
+  .text-gray-500 {
+    color: #64748b !important;
+  }
+
+  .text-primary {
+    color: #6366f1 !important;
+  }
+
+  .bg-primary\/10 {
+    background: #eef2ff !important;
+  }
+
+  .bg-gray-800,
+  .bg-gray-800\/50,
+  .bg-gray-800\/20 {
+    background: #f8fafc !important;
+  }
+
+  .border-gray-700\/50,
+  .border-gray-800\/50 {
+    border-color: #e2e8f0 !important;
+  }
+
+  [class*="animate-"] {
+    animation: none !important;
+  }
+
+  .gradient-border::before {
+    display: none !important;
+  }
+
+  /* Recharts specific */
+  .recharts-cartesian-grid-horizontal line,
+  .recharts-cartesian-grid-vertical line {
+    stroke: #e2e8f0 !important;
+  }
+
+  .recharts-text {
+    fill: #475569 !important;
+  }
+
+  .recharts-legend-item-text {
+    color: #475569 !important;
+  }
+
+  @page {
+    margin: 1cm;
+    size: landscape;
+  }
+}

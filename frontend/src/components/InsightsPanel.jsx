@@ -14,8 +14,8 @@ export default function InsightsPanel({ insights, columnStats }) {
     }
     setRefreshing(true);
     try {
-      const data = await refreshInsights(columnStats);
-      setLocalInsights(data.insights);
+      const insightsText = await refreshInsights(columnStats);
+      setLocalInsights(insightsText);
       toast.success("Insights refreshed!");
     } catch (err) {
       toast.error("Failed to refresh insights");
