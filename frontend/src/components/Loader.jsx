@@ -1,48 +1,80 @@
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 
 const messages = [
   "Parsing your data...",
-  "Analyzing columns...",
-  "Generating charts...",
-  "Asking AI for insights...",
+  "Analyzing columns & types...",
+  "Computing statistical metrics...",
+  "Detecting correlations & outliers...",
+  "Generating charts & visualizations...",
+  "Crafting AI-powered insights...",
+  "Finalizing your dashboard...",
 ];
 
 export default function Loader() {
   const [messageIndex, setMessageIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setMessageIndex((prev) => (prev + 1) % messages.length);
-    }, 3000);
-    return () => clearInterval(interval);
+    const msgInterval = setInterval(() => {
+      setMessageIndex((prev) => Math.min(prev + 1, messages.length - 1));
+    }, 2500);
+
+    const progInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 95) {
+          clearInterval(progInterval);
+          return 95;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 800);
+
+    return () => {
+      clearInterval(msgInterval);
+      clearInterval(progInterval);
+    };
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-surface/90 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="text-center">
-        <div className="relative mx-auto w-24 h-24 mb-8">
-          <div className="absolute inset-0 rounded-full border-4 border-gray-700" />
-          <div className="absolute inset-0 rounded-full border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent animate-spin" />
-          <div
-            className="absolute inset-2 rounded-full border-4 border-t-accent border-r-transparent border-b-transparent border-l-transparent animate-spin animation-delay-150"
-            style={{ animationDirection: "reverse" }}
-          />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+    <div className="fixed inset-0 bg-surface/95 backdrop-blur-sm z-50 flex items-center justify-center">
+      <div className="text-center max-w-sm">
+        {/* Animated Logo */}
+        <div className="relative mx-auto w-20 h-20 mb-6">
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary to-accent animate-pulse-slow opacity-20" />
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20">
+            <BarChart3 className="w-10 h-10 text-white" />
           </div>
+          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 animate-pulse shadow-lg shadow-green-500/50" />
         </div>
-        <div className="space-y-2">
-          <p className="text-xl font-semibold text-gray-200 animate-pulse">
-            Processing
-          </p>
-          <p
-            key={messageIndex}
-            className="text-sm text-gray-400 animate-fadeIn transition-all duration-300"
-          >
-            {messages[messageIndex]}
-          </p>
+
+        {/* Title */}
+        <p className="text-lg font-semibold text-gray-200 mb-2">
+          Processing Your Data
+        </p>
+
+        {/* Status message */}
+        <p
+          key={messageIndex}
+          className="text-sm text-gray-400 transition-all duration-300 h-5"
+          style={{
+            animation: "fadeInUp 0.4s ease-out",
+          }}
+        >
+          {messages[messageIndex]}
+        </p>
+
+        {/* Progress Bar */}
+        <div className="mt-6 w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${Math.min(progress, 100)}%` }}
+          />
         </div>
+
+        <p className="text-xs text-gray-600 mt-2 font-mono">
+          {Math.round(progress)}%
+        </p>
       </div>
     </div>
   );

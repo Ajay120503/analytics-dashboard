@@ -40,6 +40,42 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      animation: {
+        'fadeIn': 'fadeIn 0.5s ease-out forwards',
+        'slideUp': 'slideUp 0.5s ease-out forwards',
+        'slideInRight': 'slideInRight 0.4s ease-out forwards',
+        'pulse-slow': 'pulse 3s ease-in-out infinite',
+        'shimmer': 'shimmer 2s infinite linear',
+        'count-up': 'countUp 0.6s ease-out forwards',
+        'spin-slow': 'spin 3s linear infinite',
+        'bounce-gentle': 'bounceGentle 2s ease-in-out infinite',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideInRight: {
+          '0%': { opacity: '0', transform: 'translateX(20px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+        countUp: {
+          '0%': { opacity: '0', transform: 'translateY(5px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        bounceGentle: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-3px)' },
+        },
+      },
     },
   },
   plugins: [

@@ -1,4 +1,4 @@
-import { BarChart3, Upload } from "lucide-react";
+import { BarChart3, Upload, Download, RefreshCw, FileSpreadsheet } from "lucide-react";
 import KPICards from "./KPICards";
 import ChartGrid from "./ChartGrid";
 import DataTable from "./DataTable";
@@ -24,26 +24,26 @@ export default function Dashboard({ data, onReset }) {
     window.print();
   };
 
-  // Build columnStats for insights refresh - match backend _build_prompt field names
   const columnStats = {
     columns: data.columns,
     column_types: data.column_types,
     row_count: data.row_count,
     numeric_stats: {},
     categorical_top: {},
+    correlations: data.correlations || [],
+    outliers: data.outliers || {},
+    data_quality: data.data_quality || {},
   };
 
-  // Extract stats from KPIs
   data.kpis?.forEach((kpi) => {
     const key = kpi.label.replace(/^Total\s+/i, "").toLowerCase();
-    if (kpi.change !== undefined) {
-      const val = parseFloat(kpi.value.replace(/[^0-9.-]/g, "")) || 0;
+    if (kpi.raw_value !== undefined) {
       columnStats.numeric_stats[key] = {
-        mean: val,
-        std: val * 0.2,
-        min: val * 0.5,
-        max: val * 1.5,
-        median: val,
+        mean: kpi.raw_value,
+        std: kpi.raw_value * 0.2,
+        min: kpi.raw_value * 0.5,
+        max: kpi.raw_value * 1.5,
+        median: kpi.raw_value,
         count: data.row_count,
       };
     }
@@ -51,56 +51,55 @@ export default function Dashboard({ data, onReset }) {
 
   return (
     <div className="min-h-screen bg-surface">
-      {/* Top Navigation Bar */}
+      {/* Professional Top Navigation Bar */}
       <header className="sticky top-0 z-40 bg-surface/80 backdrop-blur-xl border-b border-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                <span className="text-sm font-bold text-primary">AD</span>
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20">
+                <BarChart3 className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-lg font-semibold text-white">
-                Analytics Dashboard
-              </h1>
+              <div>
+                <h1 className="text-lg font-semibold text-white leading-tight">
+                  Analytics Dashboard
+                </h1>
+                <p className="text-[10px] text-gray-500 leading-tight">Real-time Data Insights</p>
+              </div>
             </div>
+
             <div className="flex items-center gap-3">
+              {/* Live indicator */}
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800/50">
+                <span className="status-dot status-dot-live" />
+                <span className="text-xs text-gray-400">Live</span>
+              </div>
+
+              {/* Data quality badge */}
+              {data.data_quality && (
+                <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-800/50">
+                  <span className={`text-xs font-medium ${
+                    data.data_quality.missing_percentage < 5 ? "text-green-400" :
+                    data.data_quality.missing_percentage < 20 ? "text-amber-400" : "text-red-400"
+                  }`}>
+                    {Math.max(0, 100 - data.data_quality.missing_percentage * 2).toFixed(0)}% quality
+                  </span>
+                </div>
+              )}
+
               <button
                 onClick={handleExport}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <svg
-                  className="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                Export PDF
+                <Download className="w-3.5 h-3.5" />
+                Export
               </button>
+
               <button
                 onClick={onReset}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors"
               >
-                <svg
-                  className="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                  />
-                </svg>
-                Upload New File
+                <Upload className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Upload New</span>
               </button>
             </div>
           </div>
@@ -108,41 +107,40 @@ export default function Dashboard({ data, onReset }) {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Dataset Metadata */}
-        <div className="flex flex-wrap items-center gap-3 mb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Dataset Metadata Bar */}
+        <div
+          className="flex flex-wrap items-center gap-2 mb-6 p-3 rounded-xl bg-gray-800/30 border border-gray-700/30"
+          style={{ animation: "fadeInUp 0.4s ease-out" }}
+        >
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800/50">
-            <svg
-              className="w-4 h-4 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <span className="text-sm text-gray-400">{data.filename}</span>
+            <FileSpreadsheet className="w-4 h-4 text-gray-400" />
+            <span className="text-sm text-gray-300 font-medium">{data.filename}</span>
           </div>
-          <span
-            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${extColor}`}
-          >
+          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${extColor}`}>
             .{fileExt}
           </span>
-          <div className="flex items-center gap-4 text-sm text-gray-500">
-            <span>
-              <strong className="text-gray-300">
-                {data.row_count?.toLocaleString()}
-              </strong>{" "}
-              rows
+          <div className="flex items-center gap-3 text-sm text-gray-500 ml-auto">
+            <span className="flex items-center gap-1">
+              <strong className="text-gray-300">{data.row_count?.toLocaleString()}</strong>
+              <span className="text-gray-600">rows</span>
             </span>
-            <span>
-              <strong className="text-gray-300">{data.column_count}</strong>{" "}
-              columns
+            <span className="w-1 h-1 rounded-full bg-gray-600" />
+            <span className="flex items-center gap-1">
+              <strong className="text-gray-300">{data.column_count}</strong>
+              <span className="text-gray-600">columns</span>
             </span>
+            {data.data_quality && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-gray-600" />
+                <span className="flex items-center gap-1">
+                  <strong className={`${
+                    data.data_quality.duplicate_rows > 0 ? "text-amber-400" : "text-green-400"
+                  }`}>{data.data_quality.duplicate_rows}</strong>
+                  <span className="text-gray-600">duplicates</span>
+                </span>
+              </>
+            )}
           </div>
         </div>
 
