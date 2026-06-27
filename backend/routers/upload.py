@@ -54,6 +54,9 @@ async def upload_file(file: UploadFile = File(...)):
             table=processed["table"],
             insights=insights,
             column_types=column_types,
+            data_quality=processed.get("data_quality"),
+            correlations=processed.get("correlations"),
+            outliers=processed.get("outliers"),
         )
 
         return dashboard_data
