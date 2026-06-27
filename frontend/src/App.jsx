@@ -20,6 +20,10 @@ export default function App() {
     setDashboardData(null);
   }, []);
 
+  const handleDataUpdate = useCallback((newData) => {
+    setDashboardData(newData);
+  }, []);
+
   return (
     <div className="min-h-screen bg-surface">
       {loading && <Loader />}
@@ -32,7 +36,11 @@ export default function App() {
           }}
         />
       ) : (
-        <Dashboard data={dashboardData} onReset={handleReset} />
+        <Dashboard
+          data={dashboardData}
+          onReset={handleReset}
+          onDataUpdate={handleDataUpdate}
+        />
       )}
     </div>
   );

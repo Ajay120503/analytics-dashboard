@@ -51,7 +51,7 @@ class DashboardData(BaseModel):
     column_types: Dict[str, str]
     data_quality: Optional[Dict[str, Any]] = None
     correlations: Optional[List[Dict[str, Any]]] = None
-    outliers: Optional[Dict[str, List[Any]]] = None
+    outliers: Optional[Dict[str, Any]] = None
 
 
 class UploadResponse(BaseModel):

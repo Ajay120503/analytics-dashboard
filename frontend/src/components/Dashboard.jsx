@@ -1,8 +1,12 @@
-import { BarChart3, Upload, Download, RefreshCw, FileSpreadsheet } from "lucide-react";
+import { useState, useCallback } from "react";
+import { BarChart3, Upload, Download, Sliders } from "lucide-react";
 import KPICards from "./KPICards";
 import ChartGrid from "./ChartGrid";
 import DataTable from "./DataTable";
 import InsightsPanel from "./InsightsPanel";
+import KPICustomizer from "./KPICustomizer";
+import { regenerateDashboard } from "../api/client";
+import toast from "react-hot-toast";
 
 const fileTypeColors = {
   csv: "text-green-400 bg-green-500/10 border-green-500/20",
@@ -14,15 +18,16 @@ const fileTypeColors = {
   sql: "text-purple-400 bg-purple-500/10 border-purple-500/20",
 };
 
-export default function Dashboard({ data, onReset }) {
+export default function Dashboard({ data, onReset, onDataUpdate }) {
+  const [showCustomizer, setShowCustomizer] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+
   if (!data) return null;
 
   const fileExt = data.filename?.split(".").pop()?.toLowerCase() || "";
   const extColor = fileTypeColors[fileExt] || fileTypeColors.txt;
 
-  const handleExport = () => {
-    window.print();
-  };
+  const handleExport = () => window.print();
 
   const columnStats = {
     columns: data.columns,
@@ -49,9 +54,36 @@ export default function Dashboard({ data, onReset }) {
     }
   });
 
+  const handleKpiApply = useCallback(
+    async (kpiSelections) => {
+      setRegenerating(true);
+      setShowCustomizer(false);
+      try {
+        const newData = await regenerateDashboard(
+          data.file_id,
+          data.filename,
+          kpiSelections
+        );
+        if (onDataUpdate) {
+          onDataUpdate(newData);
+        }
+        const count =
+          kpiSelections.included_labels.length +
+          kpiSelections.custom_kpis.length;
+        toast.success(`Dashboard regenerated with ${count} KPIs!`);
+      } catch (err) {
+        const msg = err.response?.data?.detail || "Failed to regenerate";
+        toast.error(msg);
+      } finally {
+        setRegenerating(false);
+      }
+    },
+    [data.file_id, data.filename, onDataUpdate]
+  );
+
   return (
     <div className="min-h-screen bg-surface">
-      {/* Professional Top Navigation Bar */}
+      {/* Top Navigation Bar */}
       <header className="sticky top-0 z-40 bg-surface/80 backdrop-blur-xl border-b border-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -63,7 +95,9 @@ export default function Dashboard({ data, onReset }) {
                 <h1 className="text-lg font-semibold text-white leading-tight">
                   Analytics Dashboard
                 </h1>
-                <p className="text-[10px] text-gray-500 leading-tight">Real-time Data Insights</p>
+                <p className="text-[10px] text-gray-500 leading-tight">
+                  Real-time Data Insights
+                </p>
               </div>
             </div>
 
@@ -74,14 +108,32 @@ export default function Dashboard({ data, onReset }) {
                 <span className="text-xs text-gray-400">Live</span>
               </div>
 
-              {/* Data quality badge */}
+              {/* KPI Customizer Button */}
+              <button
+                onClick={() => setShowCustomizer(true)}
+                disabled={regenerating}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-accent bg-accent/10 hover:bg-accent/20 rounded-lg transition-all disabled:opacity-50"
+              >
+                <Sliders className={`w-3.5 h-3.5 ${regenerating ? "animate-spin" : ""}`} />
+                {regenerating ? "Regenerating..." : "Customize KPIs"}
+              </button>
+
               {data.data_quality && (
                 <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-800/50">
-                  <span className={`text-xs font-medium ${
-                    data.data_quality.missing_percentage < 5 ? "text-green-400" :
-                    data.data_quality.missing_percentage < 20 ? "text-amber-400" : "text-red-400"
-                  }`}>
-                    {Math.max(0, 100 - data.data_quality.missing_percentage * 2).toFixed(0)}% quality
+                  <span
+                    className={`text-xs font-medium ${
+                      data.data_quality.missing_percentage < 5
+                        ? "text-green-400"
+                        : data.data_quality.missing_percentage < 20
+                        ? "text-amber-400"
+                        : "text-red-400"
+                    }`}
+                  >
+                    {Math.max(
+                      0,
+                      100 - data.data_quality.missing_percentage * 2
+                    ).toFixed(0)}
+                    % quality
                   </span>
                 </div>
               )}
@@ -114,15 +166,21 @@ export default function Dashboard({ data, onReset }) {
           style={{ animation: "fadeInUp 0.4s ease-out" }}
         >
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800/50">
-            <FileSpreadsheet className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-300 font-medium">{data.filename}</span>
+            <BarChart3 className="w-4 h-4 text-gray-400" />
+            <span className="text-sm text-gray-300 font-medium">
+              {data.filename}
+            </span>
           </div>
-          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${extColor}`}>
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${extColor}`}
+          >
             .{fileExt}
           </span>
           <div className="flex items-center gap-3 text-sm text-gray-500 ml-auto">
             <span className="flex items-center gap-1">
-              <strong className="text-gray-300">{data.row_count?.toLocaleString()}</strong>
+              <strong className="text-gray-300">
+                {data.row_count?.toLocaleString()}
+              </strong>
               <span className="text-gray-600">rows</span>
             </span>
             <span className="w-1 h-1 rounded-full bg-gray-600" />
@@ -134,9 +192,15 @@ export default function Dashboard({ data, onReset }) {
               <>
                 <span className="w-1 h-1 rounded-full bg-gray-600" />
                 <span className="flex items-center gap-1">
-                  <strong className={`${
-                    data.data_quality.duplicate_rows > 0 ? "text-amber-400" : "text-green-400"
-                  }`}>{data.data_quality.duplicate_rows}</strong>
+                  <strong
+                    className={`${
+                      data.data_quality.duplicate_rows > 0
+                        ? "text-amber-400"
+                        : "text-green-400"
+                    }`}
+                  >
+                    {data.data_quality.duplicate_rows}
+                  </strong>
                   <span className="text-gray-600">duplicates</span>
                 </span>
               </>
@@ -145,7 +209,16 @@ export default function Dashboard({ data, onReset }) {
         </div>
 
         {/* KPI Cards */}
-        <section className="mb-8">
+        <section className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-primary" />
+              Key Performance Indicators
+            </h2>
+            <span className="text-xs text-gray-600">
+              {data.kpis?.length || 0} active
+            </span>
+          </div>
           <KPICards kpis={data.kpis} />
         </section>
 
@@ -155,7 +228,10 @@ export default function Dashboard({ data, onReset }) {
             <ChartGrid charts={data.charts} />
           </div>
           <div className="xl:col-span-1">
-            <InsightsPanel insights={data.insights} columnStats={columnStats} />
+            <InsightsPanel
+              insights={data.insights}
+              columnStats={columnStats}
+            />
           </div>
         </div>
 
@@ -164,6 +240,17 @@ export default function Dashboard({ data, onReset }) {
           <DataTable table={data.table} columnTypes={data.column_types} />
         </section>
       </main>
+
+      {/* KPI Customizer Modal */}
+      {showCustomizer && (
+        <KPICustomizer
+          kpis={data.kpis}
+          columnTypes={data.column_types}
+          columns={data.columns}
+          onApply={handleKpiApply}
+          onClose={() => setShowCustomizer(false)}
+        />
+      )}
     </div>
   );
 }
