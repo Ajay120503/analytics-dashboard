@@ -26,6 +26,12 @@ class ChartData(BaseModel):
     colors: List[str] = []
     description: Optional[str] = None
     annotations: Optional[List[Dict[str, Any]]] = None
+    # Available columns for dynamic selection
+    available_x_columns: List[str] = []
+    available_y_columns: List[str] = []
+    # Current selections (may differ from original x_key/y_keys after user changes)
+    selected_x_column: Optional[str] = None
+    selected_y_columns: Optional[List[str]] = None
 
 
 class TableData(BaseModel):
@@ -70,3 +76,15 @@ class RefreshRequest(BaseModel):
 
 class RefreshResponse(BaseModel):
     insights: str
+
+
+class ChartUpdateRequest(BaseModel):
+    file_id: str
+    chart_index: int
+    chart_type: str
+    x_column: str
+    y_columns: List[str]
+
+
+class ChartUpdateResponse(BaseModel):
+    chart: ChartData

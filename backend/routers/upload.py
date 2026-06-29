@@ -1,7 +1,7 @@
 import os
 import uuid
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from models.schemas import DashboardData
+from models.schemas import DashboardData, ChartUpdateRequest, ChartUpdateResponse
 from services.file_parser import FileParser
 from services.data_processor import DataProcessor
 from services.ai_insights import generate_insights
@@ -192,6 +192,85 @@ async def regenerate_dashboard(request: dict):
         # Log the error for debugging
         import traceback
         error_detail = f"Regeneration failed: {str(e)}"
+        print(f"ERROR: {error_detail}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=error_detail)
+
+
+@router.get("/api/dashboard/{file_id}", response_model=DashboardData)
+async def get_dashboard(file_id: str):
+    """Retrieve dashboard data by file_id (for session restore)."""
+    try:
+        stored = data_store.get(file_id)
+        if not stored:
+            raise HTTPException(
+                status_code=404,
+                detail="Session expired or file data not found. Please re-upload your file.",
+            )
+
+        df = stored["df"]
+        column_types = stored["column_types"]
+        processor = DataProcessor()
+        processed = processor.process(df)
+        df_summary = processor.get_summary(df, column_types)
+        insights = generate_insights(df_summary)
+
+        dashboard_data = DashboardData(
+            file_id=file_id, filename="restored",
+            row_count=processed["row_count"], column_count=processed["column_count"],
+            columns=processed["columns"], preview=processed["preview"],
+            status="success", kpis=processed["kpis"], charts=processed["charts"],
+            table=processed["table"], insights=insights,
+            column_types=column_types,
+            data_quality=processed.get("data_quality"),
+            correlations=processed.get("correlations"),
+            outliers=processed.get("outliers"),
+        )
+        return dashboard_data
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve dashboard: {str(e)}")
+
+
+@router.post("/api/chart/update", response_model=ChartUpdateResponse)
+async def update_chart(request: ChartUpdateRequest):
+    """Update a chart with new column selections and recompute the data."""
+    try:
+        stored = data_store.get(request.file_id)
+        if not stored:
+            raise HTTPException(
+                status_code=404,
+                detail="Session expired or file data not found. Please re-upload your file.",
+            )
+
+        df = stored["df"]
+        column_types = stored["column_types"]
+        processor = DataProcessor()
+
+        chart_data = processor.compute_chart_data(
+            df, column_types,
+            request.chart_type,
+            request.x_column,
+            request.y_columns
+        )
+
+        # Attach available columns metadata
+        x_cols, y_cols = processor._get_available_columns(df, column_types, request.chart_type)
+        chart_data["available_x_columns"] = x_cols
+        chart_data["available_y_columns"] = y_cols
+        chart_data["selected_x_column"] = request.x_column
+        chart_data["selected_y_columns"] = request.y_columns
+
+        from models.schemas import ChartData
+        return ChartUpdateResponse(chart=ChartData(**chart_data))
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        error_detail = f"Chart update failed: {str(e)}"
         print(f"ERROR: {error_detail}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=error_detail)

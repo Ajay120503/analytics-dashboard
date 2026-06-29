@@ -114,7 +114,11 @@ export default function Dashboard({ data, onReset, onDataUpdate }) {
                 disabled={regenerating}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-accent bg-accent/10 hover:bg-accent/20 rounded-lg transition-all disabled:opacity-50"
               >
-                <Sliders className={`w-3.5 h-3.5 ${regenerating ? "animate-spin" : ""}`} />
+                <Sliders
+                  className={`w-3.5 h-3.5 ${
+                    regenerating ? "animate-spin" : ""
+                  }`}
+                />
                 {regenerating ? "Regenerating..." : "Customize KPIs"}
               </button>
 
@@ -225,13 +229,20 @@ export default function Dashboard({ data, onReset, onDataUpdate }) {
         {/* Charts + Insights Layout */}
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-8">
           <div className="xl:col-span-3 space-y-6">
-            <ChartGrid charts={data.charts} />
+            <ChartGrid
+              charts={data.charts}
+              fileId={data.file_id}
+              onChartUpdate={(index, updatedChart) => {
+                const newCharts = [...data.charts];
+                newCharts[index] = updatedChart;
+                if (onDataUpdate) {
+                  onDataUpdate({ ...data, charts: newCharts });
+                }
+              }}
+            />
           </div>
           <div className="xl:col-span-1">
-            <InsightsPanel
-              insights={data.insights}
-              columnStats={columnStats}
-            />
+            <InsightsPanel insights={data.insights} columnStats={columnStats} />
           </div>
         </div>
 

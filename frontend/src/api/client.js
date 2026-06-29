@@ -27,3 +27,19 @@ export const regenerateDashboard = async (fileId, filename, kpiSelections) => {
   });
   return response.data;
 };
+
+export const getDashboard = async (fileId) => {
+  const response = await api.get(`/dashboard/${fileId}`);
+  return response.data;
+};
+
+export const updateChart = async (fileId, chartIndex, chartType, xColumn, yColumns) => {
+  const response = await api.post("/chart/update", {
+    file_id: fileId,
+    chart_index: chartIndex,
+    chart_type: chartType,
+    x_column: xColumn,
+    y_columns: yColumns,
+  });
+  return response.data;
+};

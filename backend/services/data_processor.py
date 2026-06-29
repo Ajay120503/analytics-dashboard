@@ -324,52 +324,198 @@ class DataProcessor:
         return kpis[:6]
 
     @staticmethod
+    def _get_available_columns(df: pd.DataFrame, column_types: Dict[str, str], chart_type: str) -> Tuple[List[str], List[str]]:
+        """Get available x and y columns for a given chart type."""
+        numeric_cols = [c for c, t in column_types.items() if t == "numeric"]
+        cat_cols = [c for c, t in column_types.items() if t == "categorical"]
+        datetime_cols = [c for c, t in column_types.items() if t == "datetime"]
+        text_cols = [c for c, t in column_types.items() if t == "text"]
+        id_cols = [c for c, t in column_types.items() if t == "id"]
+
+        if chart_type == "pie":
+            # Pie: x = categorical/text, y = numeric (count/aggregation)
+            x_cols = cat_cols + text_cols
+            y_cols = numeric_cols
+        elif chart_type == "scatter":
+            # Scatter: both axes must be numeric
+            x_cols = numeric_cols
+            y_cols = numeric_cols
+        elif chart_type in ("bar", "line", "area"):
+            # Bar/Line/Area: x = categorical/datetime/text, y = numeric
+            x_cols = cat_cols + datetime_cols + text_cols + id_cols
+            y_cols = numeric_cols
+        elif chart_type == "histogram":
+            x_cols = numeric_cols
+            y_cols = numeric_cols
+        else:
+            x_cols = list(df.columns)
+            y_cols = numeric_cols
+
+        return x_cols, y_cols
+
+    @staticmethod
+    def compute_chart_data(df: pd.DataFrame, column_types: Dict[str, str],
+                           chart_type: str, x_column: str, y_columns: List[str]) -> Dict:
+        """Compute chart data for given column selections. Returns a chart dict."""
+        default_colors = ["#6366f1", "#06b6d4", "#f59e0b", "#ef4444", "#10b981", "#8b5cf6", "#ec4899", "#14b8a6"]
+        data = []
+        x_key = x_column
+        y_keys = y_columns
+
+        if chart_type == "pie":
+            # Pie chart: value counts of x_column, or grouped by x_column using y_column
+            if y_columns and y_columns[0]:
+                y_col = y_columns[0]
+                if column_types.get(y_col) == "numeric" and x_column in df.columns:
+                    grouped = df.groupby(x_column)[y_col].sum().reset_index()
+                    grouped.columns = [x_column, "value"]
+                else:
+                    grouped = df[x_column].value_counts().reset_index()
+                    grouped.columns = [x_column, "value"]
+            else:
+                grouped = df[x_column].value_counts().reset_index()
+                grouped.columns = [x_column, "value"]
+
+            grouped = grouped.sort_values("value", ascending=False).head(10)
+            data = []
+            for _, row in grouped.iterrows():
+                data.append({
+                    "name": str(row[x_column])[:25],
+                    "value": int(row["value"]),
+                })
+            x_key = "name"
+            y_keys = ["value"]
+
+        elif chart_type == "scatter":
+            # Scatter: x and y must be numeric
+            if len(y_columns) >= 1 and x_column in df.columns and y_columns[0] in df.columns:
+                scatter_df = df[[x_column, y_columns[0]]].dropna().head(500)
+                data = scatter_df.reset_index(drop=True).to_dict(orient="records")
+                y_keys = [y_columns[0]]
+
+        elif chart_type == "histogram":
+            # Histogram: use x_column as the numeric column to bin
+            col = x_column
+            if col in df.columns and column_types.get(col) == "numeric":
+                hist_data = df[col].dropna()
+                if len(hist_data) > 0:
+                    bins = "auto" if len(hist_data) > 50 else 10
+                    counts, bin_edges = np.histogram(hist_data, bins=bins)
+                    for i in range(len(counts)):
+                        data.append({
+                            "range": f"{bin_edges[i]:.1f}-{bin_edges[i+1]:.1f}",
+                            "frequency": int(counts[i]),
+                        })
+                    x_key = "range"
+                    y_keys = ["frequency"]
+
+        elif chart_type in ("bar", "line", "area"):
+            # Bar/Line/Area: x = categorical/datetime, y = numeric
+            if y_columns:
+                y_col = y_columns[0]
+                if column_types.get(x_column) == "datetime":
+                    # Time series aggregation
+                    ts_data = df.set_index(x_column)[y_col].resample("D").mean().dropna().reset_index()
+                    ts_data[x_column] = ts_data[x_column].astype(str)
+                    data = ts_data.head(200).to_dict(orient="records")
+                    y_keys = [y_col]
+                elif column_types.get(x_column) == "numeric" and column_types.get(y_col) == "numeric":
+                    # Both numeric - bin x
+                    bins = min(20, df[x_column].nunique())
+                    if bins > 1:
+                        df["_bin"] = pd.cut(df[x_column], bins=bins, labels=False)
+                        grouped = df.groupby("_bin")[y_col].mean().reset_index()
+                        bin_edges = pd.cut(df[x_column], bins=bins).cat.categories
+                        grouped[x_column] = [f"{interval.left:.1f}-{interval.right:.1f}" for interval in bin_edges]
+                        data = grouped[[x_column, y_col]].to_dict(orient="records")
+                        y_keys = [y_col]
+                else:
+                    # Categorical x, numeric y
+                    grouped = df.groupby(x_column)[y_col].agg(["sum", "mean", "count"]).reset_index()
+                    grouped = grouped.sort_values("sum", ascending=False).head(20)
+                    grouped.columns = [x_column, "sum", "mean", "count"]
+                    grouped[x_column] = grouped[x_column].astype(str).str[:20]
+                    data = grouped.fillna(0).to_dict(orient="records")
+                    y_keys = ["sum"]
+
+        # Build title
+        title_parts = []
+        if chart_type == "pie":
+            title_parts.append(f"{x_column.replace('_', ' ').title()} Distribution")
+        elif chart_type == "scatter":
+            title_parts.append(f"{x_column.replace('_', ' ').title()} vs {y_keys[0].replace('_', ' ').title()}")
+        elif chart_type == "histogram":
+            title_parts.append(f"Distribution of {x_column.replace('_', ' ').title()}")
+        else:
+            title_parts.append(f"{y_keys[0].replace('_', ' ').title()} by {x_column.replace('_', ' ').title()}")
+        title = " ".join(title_parts)
+
+        return {
+            "type": chart_type,
+            "title": title,
+            "x_key": x_key,
+            "y_keys": y_keys,
+            "data": data,
+            "colors": default_colors[:max(1, len(y_keys))],
+            "description": f"Visualization of {', '.join(y_keys)} by {x_key}",
+        }
+
+    @staticmethod
     def _generate_charts(df: pd.DataFrame, column_types: Dict[str, str],
                           correlations: Optional[List[Dict]] = None) -> List[Dict]:
         charts = []
         numeric_cols = [c for c, t in column_types.items() if t == "numeric"]
         cat_cols = [c for c, t in column_types.items() if t == "categorical"]
         datetime_cols = [c for c, t in column_types.items() if t == "datetime"]
+        text_cols = [c for c, t in column_types.items() if t == "text"]
         default_colors = ["#6366f1", "#06b6d4", "#f59e0b", "#ef4444", "#10b981", "#8b5cf6", "#ec4899", "#14b8a6"]
 
         # 1. Bar chart: categorical vs numeric (aggregated)
         if cat_cols and numeric_cols:
-            for cat_col in cat_cols[:2]:
-                for num_col in numeric_cols[:2]:
-                    agg_data = df.groupby(cat_col)[num_col].agg(["sum", "mean", "count"]).reset_index()
-                    agg_data = agg_data.sort_values("sum", ascending=False).head(15)
-                    agg_data.columns = [cat_col, "sum", "mean", "count"]
-                    agg_data[cat_col] = agg_data[cat_col].astype(str).str[:20]
-                    charts.append({
-                        "type": "bar",
-                        "title": f"{num_col.replace('_', ' ').title()} by {cat_col.replace('_', ' ').title()}",
-                        "x_key": cat_col,
-                        "y_keys": ["sum"],
-                        "data": agg_data.fillna(0).to_dict(orient="records"),
-                        "colors": default_colors[:1],
-                        "description": f"Distribution of {num_col} across {cat_col} categories",
-                    })
-                    break
+            cat_col = cat_cols[0]
+            num_col = numeric_cols[0]
+            agg_data = df.groupby(cat_col)[num_col].agg(["sum", "mean", "count"]).reset_index()
+            agg_data = agg_data.sort_values("sum", ascending=False).head(15)
+            agg_data.columns = [cat_col, "sum", "mean", "count"]
+            agg_data[cat_col] = agg_data[cat_col].astype(str).str[:20]
+            x_cols, y_cols = DataProcessor._get_available_columns(df, column_types, "bar")
+            charts.append({
+                "type": "bar",
+                "title": f"{num_col.replace('_', ' ').title()} by {cat_col.replace('_', ' ').title()}",
+                "x_key": cat_col,
+                "y_keys": ["sum"],
+                "data": agg_data.fillna(0).to_dict(orient="records"),
+                "colors": default_colors[:1],
+                "description": f"Distribution of {num_col} across {cat_col} categories",
+                "available_x_columns": x_cols,
+                "available_y_columns": y_cols,
+                "selected_x_column": cat_col,
+                "selected_y_columns": ["sum"],
+            })
 
         # 2. Time series line chart
         if datetime_cols and numeric_cols:
             date_col = datetime_cols[0]
-            for num_col in numeric_cols[:2]:
-                ts_data = df.set_index(date_col)[num_col].resample("D").mean().reset_index()
-                ts_data = ts_data.dropna()
-                if len(ts_data) > 1:
-                    ts_data.columns = [date_col, num_col]
-                    ts_data[date_col] = ts_data[date_col].astype(str)
-                    charts.append({
-                        "type": "line",
-                        "title": f"{num_col.replace('_', ' ').title()} Over Time",
-                        "x_key": date_col,
-                        "y_keys": [num_col],
-                        "data": ts_data.to_dict(orient="records"),
-                        "colors": default_colors[1:2],
-                        "description": f"Trend analysis of {num_col} over time",
-                    })
-                    break
+            num_col = numeric_cols[0]
+            ts_data = df.set_index(date_col)[num_col].resample("D").mean().reset_index()
+            ts_data = ts_data.dropna()
+            if len(ts_data) > 1:
+                ts_data.columns = [date_col, num_col]
+                ts_data[date_col] = ts_data[date_col].astype(str)
+                x_cols, y_cols = DataProcessor._get_available_columns(df, column_types, "line")
+                charts.append({
+                    "type": "line",
+                    "title": f"{num_col.replace('_', ' ').title()} Over Time",
+                    "x_key": date_col,
+                    "y_keys": [num_col],
+                    "data": ts_data.to_dict(orient="records"),
+                    "colors": default_colors[1:2],
+                    "description": f"Trend analysis of {num_col} over time",
+                    "available_x_columns": x_cols,
+                    "available_y_columns": y_cols,
+                    "selected_x_column": date_col,
+                    "selected_y_columns": [num_col],
+                })
 
         # 3. Pie chart for categorical distribution
         if cat_cols:
@@ -388,6 +534,7 @@ class DataProcessor:
                     other_count += count
             if other_count > 0:
                 pie_data.append({"name": "Other", "value": int(other_count), "percentage": round(other_count / len(df) * 100, 1)})
+            x_cols, y_cols = DataProcessor._get_available_columns(df, column_types, "pie")
             charts.append({
                 "type": "pie",
                 "title": f"{cat_col.replace('_', ' ').title()} Distribution",
@@ -396,6 +543,10 @@ class DataProcessor:
                 "data": pie_data,
                 "colors": default_colors[:len(pie_data)],
                 "description": f"Proportional breakdown of {cat_col} categories",
+                "available_x_columns": x_cols,
+                "available_y_columns": y_cols,
+                "selected_x_column": cat_col,
+                "selected_y_columns": ["value"],
             })
 
         # 4. Area chart for first numeric column
@@ -405,6 +556,7 @@ class DataProcessor:
             area_data = sorted_df[[num_col]].head(100).reset_index(drop=True)
             area_data = area_data.reset_index()
             area_data.columns = ["index", num_col]
+            x_cols, y_cols = DataProcessor._get_available_columns(df, column_types, "area")
             charts.append({
                 "type": "area",
                 "title": f"{num_col.replace('_', ' ').title()} Trend (First 100)",
@@ -413,6 +565,10 @@ class DataProcessor:
                 "data": area_data.fillna(0).to_dict(orient="records"),
                 "colors": default_colors[2:3],
                 "description": f"Sequential trend of {num_col}",
+                "available_x_columns": x_cols,
+                "available_y_columns": y_cols,
+                "selected_x_column": "index",
+                "selected_y_columns": [num_col],
             })
 
         # 5. Scatter chart with correlation info
@@ -426,6 +582,7 @@ class DataProcessor:
                     if c["col1"] == num1 and c["col2"] == num2:
                         corr_info = f" (r = {c['value']:.2f}, {c['strength']} {c['direction']})"
                         break
+            x_cols, y_cols = DataProcessor._get_available_columns(df, column_types, "scatter")
             charts.append({
                 "type": "scatter",
                 "title": f"{num1.title()} vs {num2.title()}",
@@ -434,6 +591,10 @@ class DataProcessor:
                 "data": scatter_data.to_dict(orient="records"),
                 "colors": default_colors[:1],
                 "description": f"Correlation between {num1} and {num2}{corr_info}",
+                "available_x_columns": x_cols,
+                "available_y_columns": y_cols,
+                "selected_x_column": num1,
+                "selected_y_columns": [num2],
             })
 
         # 6. Histogram with auto bins
@@ -450,6 +611,7 @@ class DataProcessor:
                         "frequency": int(counts[i]),
                         "density": round(float(counts[i] / len(hist_data) * 100), 2),
                     })
+                x_cols, y_cols = DataProcessor._get_available_columns(df, column_types, "histogram")
                 charts.append({
                     "type": "histogram",
                     "title": f"Distribution of {num_col.replace('_', ' ').title()}",
@@ -458,6 +620,10 @@ class DataProcessor:
                     "data": hist_rows,
                     "colors": default_colors[4:5],
                     "description": f"Frequency distribution with {len(hist_rows)} bins",
+                    "available_x_columns": x_cols,
+                    "available_y_columns": y_cols,
+                    "selected_x_column": num_col,
+                    "selected_y_columns": ["frequency"],
                 })
 
         return charts[:6]
