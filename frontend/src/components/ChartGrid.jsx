@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   BarChart,
   Bar,
@@ -17,6 +17,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  ZAxis,
 } from "recharts";
 import {
   BarChart3,
@@ -26,6 +27,7 @@ import {
   Maximize2,
   Minimize2,
   RefreshCw,
+  Layers,
 } from "lucide-react";
 import { updateChart } from "../api/client";
 import toast from "react-hot-toast";
@@ -37,6 +39,7 @@ const chartTypeOptions = [
   { value: "area", label: "Area", icon: TrendingUp },
   { value: "scatter", label: "Scatter", icon: Grid3X3 },
   { value: "histogram", label: "Histogram", icon: Grid3X3 },
+  { value: "cluster", label: "Cluster", icon: Layers },
 ];
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -62,89 +65,64 @@ export default function ChartGrid({ charts, fileId, onChartUpdate }) {
   const [chartTypes, setChartTypes] = useState({});
   const [fullscreen, setFullscreen] = useState(null);
   const [updatingCharts, setUpdatingCharts] = useState({});
+  const [dataKeys, setDataKeys] = useState({}); // unique keys to force re-render
+  const chartRefs = useRef({});
 
   const getChartType = (index) =>
     chartTypes[index] || charts[index]?.type || "bar";
 
+  const getDataKey = (index) => dataKeys[index] || `chart-${index}-0`;
+
+  // Call the backend to recompute chart data
+  const doColumnUpdate = useCallback(
+    async (index, chartType, xColumn, yColumns) => {
+      setUpdatingCharts((prev) => ({ ...prev, [index]: true }));
+
+      try {
+        const result = await updateChart(
+          fileId,
+          index,
+          chartType,
+          xColumn,
+          yColumns
+        );
+        if (onChartUpdate && result.chart) {
+          // Force Recharts to re-render by giving a new key
+          setDataKeys((prev) => ({
+            ...prev,
+            [index]: `chart-${index}-${Date.now()}`,
+          }));
+          onChartUpdate(index, result.chart);
+        }
+      } catch (err) {
+        const msg = err.response?.data?.detail || "Failed to update chart";
+        toast.error(msg);
+      } finally {
+        setUpdatingCharts((prev) => ({ ...prev, [index]: false }));
+      }
+    },
+    [fileId, onChartUpdate]
+  );
+
   const handleTypeChange = (index, newType) => {
     setChartTypes((prev) => ({ ...prev, [index]: newType }));
-    // When chart type changes, recompute data with default columns for the new type
     const chart = charts[index];
     if (!chart) return;
     const xCol = chart.selected_x_column || chart.x_key;
     const yCols = chart.selected_y_columns || chart.y_keys || [];
     if (xCol && yCols.length > 0) {
-      // Call updateChart directly with the new type since state won't update synchronously
       doColumnUpdate(index, newType, xCol, yCols);
     }
   };
 
-  const doColumnUpdate = useCallback(
-    async (index, chartType, xColumn, yColumns) => {
-      const chart = charts[index];
-      if (!chart) return;
-
-      setUpdatingCharts((prev) => ({ ...prev, [index]: true }));
-
-      try {
-        const result = await updateChart(
-          fileId,
-          index,
-          chartType,
-          xColumn,
-          yColumns
-        );
-        if (onChartUpdate && result.chart) {
-          onChartUpdate(index, result.chart);
-        }
-        toast.success("Chart updated!");
-      } catch (err) {
-        const msg = err.response?.data?.detail || "Failed to update chart";
-        toast.error(msg);
-      } finally {
-        setUpdatingCharts((prev) => ({ ...prev, [index]: false }));
-      }
-    },
-    [charts, fileId, onChartUpdate]
-  );
-
-  const handleColumnChange = useCallback(
-    async (index, xColumn, yColumns) => {
-      const chart = charts[index];
-      if (!chart) return;
-
-      const chartType = chartTypes[index] || chart.type;
-      setUpdatingCharts((prev) => ({ ...prev, [index]: true }));
-
-      try {
-        const result = await updateChart(
-          fileId,
-          index,
-          chartType,
-          xColumn,
-          yColumns
-        );
-        if (onChartUpdate && result.chart) {
-          onChartUpdate(index, result.chart);
-        }
-        toast.success("Chart updated!");
-      } catch (err) {
-        const msg = err.response?.data?.detail || "Failed to update chart";
-        toast.error(msg);
-      } finally {
-        setUpdatingCharts((prev) => ({ ...prev, [index]: false }));
-      }
-    },
-    [charts, fileId, chartTypes, onChartUpdate]
-  );
-
   const handleXColumnChange = (index, col) => {
     const chart = charts[index];
     if (!chart) return;
-    // Keep first y column as default, change x
+    const chartType = chartTypes[index] || chart.type;
     const yCols = chart.selected_y_columns || chart.y_keys || [];
-    handleColumnChange(
+    doColumnUpdate(
       index,
+      chartType,
       col,
       yCols.length > 0 ? yCols : [chart.available_y_columns[0] || col]
     );
@@ -153,8 +131,9 @@ export default function ChartGrid({ charts, fileId, onChartUpdate }) {
   const handleYColumnChange = (index, col) => {
     const chart = charts[index];
     if (!chart) return;
+    const chartType = chartTypes[index] || chart.type;
     const xCol = chart.selected_x_column || chart.x_key;
-    handleColumnChange(index, xCol, [col]);
+    doColumnUpdate(index, chartType, xCol, [col]);
   };
 
   if (!charts || charts.length === 0) return null;
@@ -194,6 +173,7 @@ export default function ChartGrid({ charts, fileId, onChartUpdate }) {
             </div>
             <div className="h-[500px]">
               <ChartContent
+                key={getDataKey(fullscreen)}
                 chart={charts[fullscreen]}
                 chartType={getChartType(fullscreen)}
                 height={500}
@@ -242,44 +222,48 @@ export default function ChartGrid({ charts, fileId, onChartUpdate }) {
             {/* Column Selectors */}
             <div className="flex items-center gap-2 mb-3 flex-wrap">
               {/* X-axis column selector */}
-              <div className="flex items-center gap-1">
-                <label className="text-[10px] text-gray-500 uppercase tracking-wider">
-                  X:
-                </label>
-                <select
-                  value={chart.selected_x_column || chart.x_key}
-                  onChange={(e) => handleXColumnChange(index, e.target.value)}
-                  disabled={updatingCharts[index]}
-                  className="text-[11px] bg-gray-800/50 border border-gray-700/50 rounded px-1.5 py-1 text-gray-300 focus:ring-1 focus:ring-primary focus:border-transparent max-w-[130px]"
-                >
-                  {(chart.available_x_columns || []).map((col) => (
-                    <option key={col} value={col}>
-                      {col}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {(chart.available_x_columns || []).length > 0 && (
+                <div className="flex items-center gap-1">
+                  <label className="text-[10px] text-gray-500 uppercase tracking-wider">
+                    X:
+                  </label>
+                  <select
+                    value={chart.selected_x_column || chart.x_key}
+                    onChange={(e) => handleXColumnChange(index, e.target.value)}
+                    disabled={updatingCharts[index]}
+                    className="text-[11px] bg-gray-800/50 border border-gray-700/50 rounded px-1.5 py-1 text-gray-300 focus:ring-1 focus:ring-primary focus:border-transparent max-w-[130px]"
+                  >
+                    {(chart.available_x_columns || []).map((col) => (
+                      <option key={col} value={col}>
+                        {col}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* Y-axis column selector */}
-              <div className="flex items-center gap-1">
-                <label className="text-[10px] text-gray-500 uppercase tracking-wider">
-                  Y:
-                </label>
-                <select
-                  value={
-                    (chart.selected_y_columns || chart.y_keys || [])[0] || ""
-                  }
-                  onChange={(e) => handleYColumnChange(index, e.target.value)}
-                  disabled={updatingCharts[index]}
-                  className="text-[11px] bg-gray-800/50 border border-gray-700/50 rounded px-1.5 py-1 text-gray-300 focus:ring-1 focus:ring-primary focus:border-transparent max-w-[130px]"
-                >
-                  {(chart.available_y_columns || []).map((col) => (
-                    <option key={col} value={col}>
-                      {col}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {(chart.available_y_columns || []).length > 0 && (
+                <div className="flex items-center gap-1">
+                  <label className="text-[10px] text-gray-500 uppercase tracking-wider">
+                    Y:
+                  </label>
+                  <select
+                    value={
+                      (chart.selected_y_columns || chart.y_keys || [])[0] || ""
+                    }
+                    onChange={(e) => handleYColumnChange(index, e.target.value)}
+                    disabled={updatingCharts[index]}
+                    className="text-[11px] bg-gray-800/50 border border-gray-700/50 rounded px-1.5 py-1 text-gray-300 focus:ring-1 focus:ring-primary focus:border-transparent max-w-[130px]"
+                  >
+                    {(chart.available_y_columns || []).map((col) => (
+                      <option key={col} value={col}>
+                        {col}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             {chart.description && (
@@ -288,6 +272,7 @@ export default function ChartGrid({ charts, fileId, onChartUpdate }) {
               </p>
             )}
             <ChartContent
+              key={getDataKey(index)}
               chart={chart}
               chartType={getChartType(index)}
               height={280}
@@ -320,9 +305,19 @@ function ChartContent({ chart, chartType, height }) {
     tick: { fontSize: 11, fill: "#94a3b8" },
   };
 
-  // Determine x_key and y_keys from current selections or defaults
   const xKey = chart.selected_x_column || chart.x_key;
   const yKeys = chart.selected_y_columns || chart.y_keys || [];
+
+  if (!data || data.length === 0) {
+    return (
+      <div
+        className="flex items-center justify-center text-gray-500 text-xs"
+        style={{ height }}
+      >
+        No data available for this selection
+      </div>
+    );
+  }
 
   switch (chartType) {
     case "bar":
@@ -334,15 +329,17 @@ function ChartContent({ chart, chartType, height }) {
             <YAxis {...axisProps} />
             <Tooltip content={<CustomTooltip />} />
             <Legend wrapperStyle={{ fontSize: "11px", color: "#94a3b8" }} />
-            {yKeys.map((key, i) => (
-              <Bar
-                key={key}
-                dataKey={key}
-                fill={colors[i % colors.length]}
-                radius={[4, 4, 0, 0]}
-                maxBarSize={40}
-              />
-            ))}
+            {yKeys
+              .filter((k) => k !== "cluster")
+              .map((key, i) => (
+                <Bar
+                  key={key}
+                  dataKey={key}
+                  fill={colors[i % colors.length]}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={40}
+                />
+              ))}
           </BarChart>
         </ResponsiveContainer>
       );
@@ -356,17 +353,19 @@ function ChartContent({ chart, chartType, height }) {
             <YAxis {...axisProps} />
             <Tooltip content={<CustomTooltip />} />
             <Legend wrapperStyle={{ fontSize: "11px", color: "#94a3b8" }} />
-            {yKeys.map((key, i) => (
-              <Line
-                key={key}
-                type="monotone"
-                dataKey={key}
-                stroke={colors[i % colors.length]}
-                strokeWidth={2}
-                dot={{ r: 3 }}
-                activeDot={{ r: 5 }}
-              />
-            ))}
+            {yKeys
+              .filter((k) => k !== "cluster")
+              .map((key, i) => (
+                <Line
+                  key={key}
+                  type="monotone"
+                  dataKey={key}
+                  stroke={colors[i % colors.length]}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+              ))}
           </LineChart>
         </ResponsiveContainer>
       );
@@ -404,17 +403,19 @@ function ChartContent({ chart, chartType, height }) {
             <YAxis {...axisProps} />
             <Tooltip content={<CustomTooltip />} />
             <Legend wrapperStyle={{ fontSize: "11px", color: "#94a3b8" }} />
-            {yKeys.map((key, i) => (
-              <Area
-                key={key}
-                type="monotone"
-                dataKey={key}
-                stroke={colors[i % colors.length]}
-                fill={colors[i % colors.length]}
-                fillOpacity={0.15}
-                strokeWidth={2}
-              />
-            ))}
+            {yKeys
+              .filter((k) => k !== "cluster")
+              .map((key, i) => (
+                <Area
+                  key={key}
+                  type="monotone"
+                  dataKey={key}
+                  stroke={colors[i % colors.length]}
+                  fill={colors[i % colors.length]}
+                  fillOpacity={0.15}
+                  strokeWidth={2}
+                />
+              ))}
           </AreaChart>
         </ResponsiveContainer>
       );
@@ -424,10 +425,69 @@ function ChartContent({ chart, chartType, height }) {
         <ResponsiveContainer width="100%" height={height}>
           <ScatterChart>
             <CartesianGrid {...commonProps} />
-            <XAxis dataKey={xKey} {...axisProps} />
-            <YAxis dataKey={yKeys[0]} {...axisProps} />
-            <Tooltip content={<CustomTooltip />} />
+            <XAxis dataKey={xKey} name={xKey} {...axisProps} />
+            <YAxis dataKey={yKeys[0]} name={yKeys[0]} {...axisProps} />
+            <ZAxis range={[60, 60]} />
+            <Tooltip
+              cursor={{ strokeDasharray: "3 3" }}
+              content={<CustomTooltip />}
+            />
             <Scatter data={data} fill={colors[0]} />
+          </ScatterChart>
+        </ResponsiveContainer>
+      );
+
+    case "cluster":
+      return (
+        <ResponsiveContainer width="100%" height={height}>
+          <ScatterChart>
+            <CartesianGrid {...commonProps} />
+            <XAxis dataKey={xKey} name={xKey} {...axisProps} />
+            <YAxis dataKey={yKeys[0]} name={yKeys[0]} {...axisProps} />
+            <ZAxis range={[60, 60]} />
+            <Tooltip
+              cursor={{ strokeDasharray: "3 3" }}
+              content={<CustomTooltip />}
+            />
+            {(() => {
+              // Group data points by cluster label
+              const clusterGroups = {};
+              const centroids = [];
+              data.forEach((point) => {
+                if (point.centroid) {
+                  centroids.push(point);
+                } else {
+                  const c = point.cluster ?? 0;
+                  if (!clusterGroups[c]) clusterGroups[c] = [];
+                  clusterGroups[c].push(point);
+                }
+              });
+              return (
+                <>
+                  {Object.entries(clusterGroups).map(([cluster, points]) => (
+                    <Scatter
+                      key={`cluster-${cluster}`}
+                      data={points}
+                      fill={
+                        points[0]?.cluster_color ||
+                        colors[parseInt(cluster) % colors.length]
+                      }
+                      name={`Cluster ${cluster}`}
+                    />
+                  ))}
+                  {centroids.length > 0 && (
+                    <Scatter
+                      data={centroids}
+                      fill="#ffffff"
+                      stroke="#000000"
+                      strokeWidth={2}
+                      name="Centroid"
+                      shape="diamond"
+                    />
+                  )}
+                </>
+              );
+            })()}
           </ScatterChart>
         </ResponsiveContainer>
       );

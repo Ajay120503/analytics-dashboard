@@ -5,6 +5,12 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
+try:
+    from sklearn.cluster import KMeans
+    HAS_SKLEARN = True
+except ImportError:
+    HAS_SKLEARN = False
+
 
 class DataProcessor:
     @staticmethod
@@ -333,15 +339,15 @@ class DataProcessor:
         id_cols = [c for c, t in column_types.items() if t == "id"]
 
         if chart_type == "pie":
-            # Pie: x = categorical/text, y = numeric (count/aggregation)
             x_cols = cat_cols + text_cols
             y_cols = numeric_cols
         elif chart_type == "scatter":
-            # Scatter: both axes must be numeric
+            x_cols = numeric_cols
+            y_cols = numeric_cols
+        elif chart_type == "cluster":
             x_cols = numeric_cols
             y_cols = numeric_cols
         elif chart_type in ("bar", "line", "area"):
-            # Bar/Line/Area: x = categorical/datetime/text, y = numeric
             x_cols = cat_cols + datetime_cols + text_cols + id_cols
             y_cols = numeric_cols
         elif chart_type == "histogram":
@@ -354,6 +360,45 @@ class DataProcessor:
         return x_cols, y_cols
 
     @staticmethod
+    def _compute_cluster_data(df: pd.DataFrame, x_column: str, y_column: str, n_clusters: int = 3) -> Dict:
+        """Compute KMeans cluster data for two numeric columns."""
+        data = []
+        if not HAS_SKLEARN:
+            return {"data": data, "x_key": x_column, "y_keys": [y_column]}
+
+        cluster_df = df[[x_column, y_column]].dropna().head(500)
+        if len(cluster_df) < n_clusters * 3:
+            return {"data": cluster_df.reset_index(drop=True).to_dict(orient="records"),
+                    "x_key": x_column, "y_keys": [y_column]}
+
+        X = cluster_df.values
+        kmeans = KMeans(n_clusters=min(n_clusters, len(X)), random_state=42, n_init=10)
+        labels = kmeans.fit_predict(X)
+        centroids = kmeans.cluster_centers_
+
+        cluster_colors = ["#6366f1", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#ec4899"]
+        for i, (_, row) in enumerate(cluster_df.iterrows()):
+            label = int(labels[i])
+            data.append({
+                x_column: float(row[x_column]),
+                y_column: float(row[y_column]),
+                "cluster": label,
+                "cluster_color": cluster_colors[label % len(cluster_colors)],
+            })
+
+        # Add centroids
+        for i, centroid in enumerate(centroids):
+            data.append({
+                x_column: float(centroid[0]),
+                y_column: float(centroid[1]),
+                "cluster": i,
+                "cluster_color": "#ffffff",
+                "centroid": True,
+            })
+
+        return {"data": data, "x_key": x_column, "y_keys": [y_column, "cluster"]}
+
+    @staticmethod
     def compute_chart_data(df: pd.DataFrame, column_types: Dict[str, str],
                            chart_type: str, x_column: str, y_columns: List[str]) -> Dict:
         """Compute chart data for given column selections. Returns a chart dict."""
@@ -363,12 +408,10 @@ class DataProcessor:
         y_keys = y_columns
 
         if chart_type == "pie":
-            # Pie chart: value counts of x_column, or grouped by x_column using y_column
             if y_columns and y_columns[0]:
                 y_col = y_columns[0]
                 if column_types.get(y_col) == "numeric" and x_column in df.columns:
                     grouped = df.groupby(x_column)[y_col].sum().reset_index()
-                    grouped.columns = [x_column, "value"]
                 else:
                     grouped = df[x_column].value_counts().reset_index()
                     grouped.columns = [x_column, "value"]
@@ -386,15 +429,20 @@ class DataProcessor:
             x_key = "name"
             y_keys = ["value"]
 
+        elif chart_type == "cluster":
+            if len(y_columns) >= 1 and x_column in df.columns and y_columns[0] in df.columns:
+                result = DataProcessor._compute_cluster_data(df, x_column, y_columns[0])
+                data = result["data"]
+                x_key = result["x_key"]
+                y_keys = result["y_keys"]
+
         elif chart_type == "scatter":
-            # Scatter: x and y must be numeric
             if len(y_columns) >= 1 and x_column in df.columns and y_columns[0] in df.columns:
                 scatter_df = df[[x_column, y_columns[0]]].dropna().head(500)
                 data = scatter_df.reset_index(drop=True).to_dict(orient="records")
                 y_keys = [y_columns[0]]
 
         elif chart_type == "histogram":
-            # Histogram: use x_column as the numeric column to bin
             col = x_column
             if col in df.columns and column_types.get(col) == "numeric":
                 hist_data = df[col].dropna()
@@ -410,27 +458,26 @@ class DataProcessor:
                     y_keys = ["frequency"]
 
         elif chart_type in ("bar", "line", "area"):
-            # Bar/Line/Area: x = categorical/datetime, y = numeric
             if y_columns:
                 y_col = y_columns[0]
-                if column_types.get(x_column) == "datetime":
-                    # Time series aggregation
+                if x_column not in df.columns:
+                    data = []
+                elif column_types.get(x_column) == "datetime":
                     ts_data = df.set_index(x_column)[y_col].resample("D").mean().dropna().reset_index()
                     ts_data[x_column] = ts_data[x_column].astype(str)
                     data = ts_data.head(200).to_dict(orient="records")
                     y_keys = [y_col]
                 elif column_types.get(x_column) == "numeric" and column_types.get(y_col) == "numeric":
-                    # Both numeric - bin x
                     bins = min(20, df[x_column].nunique())
                     if bins > 1:
-                        df["_bin"] = pd.cut(df[x_column], bins=bins, labels=False)
-                        grouped = df.groupby("_bin")[y_col].mean().reset_index()
-                        bin_edges = pd.cut(df[x_column], bins=bins).cat.categories
+                        df_temp = df.copy()
+                        df_temp["_bin"] = pd.cut(df_temp[x_column], bins=bins, labels=False)
+                        grouped = df_temp.groupby("_bin")[y_col].mean().reset_index()
+                        bin_edges = pd.cut(df_temp[x_column], bins=bins).cat.categories
                         grouped[x_column] = [f"{interval.left:.1f}-{interval.right:.1f}" for interval in bin_edges]
                         data = grouped[[x_column, y_col]].to_dict(orient="records")
                         y_keys = [y_col]
                 else:
-                    # Categorical x, numeric y
                     grouped = df.groupby(x_column)[y_col].agg(["sum", "mean", "count"]).reset_index()
                     grouped = grouped.sort_values("sum", ascending=False).head(20)
                     grouped.columns = [x_column, "sum", "mean", "count"]
@@ -444,11 +491,16 @@ class DataProcessor:
             title_parts.append(f"{x_column.replace('_', ' ').title()} Distribution")
         elif chart_type == "scatter":
             title_parts.append(f"{x_column.replace('_', ' ').title()} vs {y_keys[0].replace('_', ' ').title()}")
+        elif chart_type == "cluster":
+            title_parts.append(f"Cluster: {x_column.replace('_', ' ').title()} vs {y_keys[0].replace('_', ' ').title()}")
         elif chart_type == "histogram":
             title_parts.append(f"Distribution of {x_column.replace('_', ' ').title()}")
         else:
             title_parts.append(f"{y_keys[0].replace('_', ' ').title()} by {x_column.replace('_', ' ').title()}")
         title = " ".join(title_parts)
+
+        # Also attach available columns for the frontend selectors
+        x_cols, y_cols = DataProcessor._get_available_columns(df, column_types, chart_type)
 
         return {
             "type": chart_type,
@@ -458,6 +510,10 @@ class DataProcessor:
             "data": data,
             "colors": default_colors[:max(1, len(y_keys))],
             "description": f"Visualization of {', '.join(y_keys)} by {x_key}",
+            "available_x_columns": x_cols,
+            "available_y_columns": y_cols,
+            "selected_x_column": x_column,
+            "selected_y_columns": y_columns,
         }
 
     @staticmethod
@@ -597,7 +653,27 @@ class DataProcessor:
                 "selected_y_columns": [num2],
             })
 
-        # 6. Histogram with auto bins
+        # 6. Cluster chart (if sklearn available)
+        if len(numeric_cols) >= 2 and len(charts) < 6 and HAS_SKLEARN:
+            num1, num2 = numeric_cols[0], numeric_cols[1]
+            result = DataProcessor._compute_cluster_data(df, num1, num2)
+            if result["data"]:
+                x_cols, y_cols = DataProcessor._get_available_columns(df, column_types, "cluster")
+                charts.append({
+                    "type": "cluster",
+                    "title": f"Cluster: {num1.title()} vs {num2.title()}",
+                    "x_key": num1,
+                    "y_keys": [num2, "cluster"],
+                    "data": result["data"],
+                    "colors": default_colors,
+                    "description": f"KMeans clustering of {num1} and {num2}",
+                    "available_x_columns": x_cols,
+                    "available_y_columns": y_cols,
+                    "selected_x_column": num1,
+                    "selected_y_columns": [num2],
+                })
+
+        # 7. Histogram with auto bins
         if numeric_cols and len(charts) < 6:
             num_col = numeric_cols[0]
             hist_data = df[num_col].dropna()
