@@ -405,16 +405,31 @@ class DataProcessor:
         default_colors = ["#6366f1", "#06b6d4", "#f59e0b", "#ef4444", "#10b981", "#8b5cf6", "#ec4899", "#14b8a6"]
         data = []
         x_key = x_column
-        y_keys = y_columns
+        y_keys = y_columns if y_columns else []
+
+        # Validate that requested columns actually exist in the dataframe
+        if x_column not in df.columns:
+            x_column = df.columns[0] if len(df.columns) > 0 else x_column
+            x_key = x_column
+        valid_y = []
+        for yc in y_keys:
+            if yc in df.columns:
+                valid_y.append(yc)
+        # If no valid y columns found, get the first available y column for this chart type
+        if len(valid_y) == 0:
+            _, avail_y = DataProcessor._get_available_columns(df, column_types, chart_type)
+            if avail_y:
+                y_keys = [avail_y[0]]
+            else:
+                y_keys = []
+        else:
+            y_keys = valid_y
 
         if chart_type == "pie":
-            if y_columns and y_columns[0]:
-                y_col = y_columns[0]
-                if column_types.get(y_col) == "numeric" and x_column in df.columns:
-                    grouped = df.groupby(x_column)[y_col].sum().reset_index()
-                else:
-                    grouped = df[x_column].value_counts().reset_index()
-                    grouped.columns = [x_column, "value"]
+            # Use validated y_keys instead of raw y_columns
+            y_col_for_pie = y_keys[0] if y_keys else None
+            if y_col_for_pie and column_types.get(y_col_for_pie) == "numeric" and x_column in df.columns:
+                grouped = df.groupby(x_column)[y_col_for_pie].sum().reset_index()
             else:
                 grouped = df[x_column].value_counts().reset_index()
                 grouped.columns = [x_column, "value"]
@@ -502,18 +517,24 @@ class DataProcessor:
         # Also attach available columns for the frontend selectors
         x_cols, y_cols = DataProcessor._get_available_columns(df, column_types, chart_type)
 
+        # IMPORTANT: selected_y_columns must always contain real column names, not aggregation aliases like "sum".
+        # The y_keys may differ from the original y_columns for aggregation (e.g. "sum" for bar charts).
+        # We keep the original y_columns as the selected columns so the frontend can send them back.
+        actual_y_selections = y_columns
+        render_y_keys = y_keys
+
         return {
             "type": chart_type,
             "title": title,
             "x_key": x_key,
-            "y_keys": y_keys,
+            "y_keys": render_y_keys,
             "data": data,
-            "colors": default_colors[:max(1, len(y_keys))],
-            "description": f"Visualization of {', '.join(y_keys)} by {x_key}",
+            "colors": default_colors[:max(1, len(render_y_keys))],
+            "description": f"Visualization of {', '.join(render_y_keys)} by {x_key}",
             "available_x_columns": x_cols,
             "available_y_columns": y_cols,
             "selected_x_column": x_column,
-            "selected_y_columns": y_columns,
+            "selected_y_columns": actual_y_selections,
         }
 
     @staticmethod
@@ -546,7 +567,7 @@ class DataProcessor:
                 "available_x_columns": x_cols,
                 "available_y_columns": y_cols,
                 "selected_x_column": cat_col,
-                "selected_y_columns": ["sum"],
+                "selected_y_columns": [num_col],  # Store REAL column name, not "sum"
             })
 
         # 2. Time series line chart
@@ -591,6 +612,8 @@ class DataProcessor:
             if other_count > 0:
                 pie_data.append({"name": "Other", "value": int(other_count), "percentage": round(other_count / len(df) * 100, 1)})
             x_cols, y_cols = DataProcessor._get_available_columns(df, column_types, "pie")
+            # For pie charts, use first available numeric column for the Y dropdown
+            pie_y_selection = y_cols[:1] if y_cols else []
             charts.append({
                 "type": "pie",
                 "title": f"{cat_col.replace('_', ' ').title()} Distribution",
@@ -602,7 +625,7 @@ class DataProcessor:
                 "available_x_columns": x_cols,
                 "available_y_columns": y_cols,
                 "selected_x_column": cat_col,
-                "selected_y_columns": ["value"],
+                "selected_y_columns": pie_y_selection,
             })
 
         # 4. Area chart for first numeric column
@@ -699,7 +722,7 @@ class DataProcessor:
                     "available_x_columns": x_cols,
                     "available_y_columns": y_cols,
                     "selected_x_column": num_col,
-                    "selected_y_columns": ["frequency"],
+                    "selected_y_columns": [num_col],  # Store REAL column name, not "frequency"
                 })
 
         return charts[:6]

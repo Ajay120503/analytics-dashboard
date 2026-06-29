@@ -305,8 +305,12 @@ function ChartContent({ chart, chartType, height }) {
     tick: { fontSize: 11, fill: "#94a3b8" },
   };
 
+  // xKey: the field name used for the X-axis data binding in Recharts
+  // yKeys: the field name(s) used for Y-axis data binding in Recharts (e.g. "sum", "value", actual column name for scatter/cluster)
+  // selectedYCol: the display name for the Y dropdown (real column name from the dataset)
   const xKey = chart.selected_x_column || chart.x_key;
-  const yKeys = chart.selected_y_columns || chart.y_keys || [];
+  const yKeys = chart.y_keys || []; // These are the actual data keys in the chart data array
+  const selectedYCol = chart.selected_y_columns || yKeys;
 
   if (!data || data.length === 0) {
     return (
